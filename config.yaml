@@ -1,0 +1,27 @@
+options:
+ 
+  http-proxy-port:
+    type: int
+    default: 8123
+    description: "HTTP proxy port"
+
+  socks5-proxy-port:
+    type: int
+    default: 9050
+    description: "SOCKS proxy port"
+
+  relay:
+    type: boolean
+    default: true
+    description: "Enable Tor relay."
+  relay-port:
+    type: int
+    default: 9001
+    description: "Port to advertise for incoming Tor connections."
+  relay-nickname:
+    type: string
+    description: "Nickname to give this relay node."
+  relay-exit-policy:
+    type: string
+    default: "reject *:*"
+    description: "Exit policy for the relay node."

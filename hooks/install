@@ -1,0 +1,22 @@
+#!/bin/bash
+# Here do anything needed to install the service
+# i.e. apt-get install -y foo  or  bzr branch http://myserver/mycode /srv/webroot
+# Make sure this hook exits cleanly and is idempotent, common problems here are
+# failing to account for a debconf question on a dependency, or trying to pull
+# from github without installing git first.
+
+. /etc/lsb-release
+
+cat >/etc/apt/sources.list.d/torproject.list <<EOF
+deb     http://deb.torproject.org/torproject.org $DISTRIB_CODENAME main
+EOF
+
+gpg --keyserver keys.gnupg.net --recv 886DDD89
+gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -
+
+apt-get update
+apt-get install -y deb.torproject.org-keyring
+apt-get install -y tor polipo
+
+mkdir -p /etc/polipo/config.d
+mkdir -p /etc/tor/torrc.d

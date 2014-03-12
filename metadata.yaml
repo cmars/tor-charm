@@ -1,0 +1,21 @@
+name: tor-service
+summary: Anonymity Online
+maintainer: Casey Marshall <cmars@cmarstech.com>
+description: |
+   Tor is free software and an open network that helps you defend against
+   traffic analysis, a form of network surveillance that threatens personal
+   freedom and privacy, confidential business activities and relationships, and
+   state security.
+
+   This charm deploys a standalone Tor proxy capable of proxying outbound
+   traffic for other services in the Juju environment's private network. By
+   default, this charm relays traffic internally for the Tor network but does
+   not permit outbound traffic.
+categories:
+  - miscellaneous
+subordinate: false
+provides:
+  socks5-proxy:
+    interface: socks5
+  http-proxy:
+    interface: http
