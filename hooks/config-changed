@@ -17,11 +17,11 @@ EOF
 if [ $(config-get relay | tr A-Z a-z) = "true" ]; then
 	NICKNAME=$(config-get nickname)
 	if [ -z "$NICKNAME" ]; then
-		NICKNAME=$(dd if=/dev/urandom of=/dev/stdout count=1 bs=1k | sha1sum | awk '{print $1}')
+		NICKNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
 	fi
 
 	cat >/etc/tor/torrc.d/01-relay <<EOF
-ORPort $(unit-get public-address):$(config-get relay-port)
+ORPort 0.0.0.0:$(config-get relay-port)
 Address $(unit-get public-address)
 Nickname $NICKNAME
 ExitPolicy $(config-get relay-exit-policy)
