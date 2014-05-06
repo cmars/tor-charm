@@ -3,6 +3,13 @@
 # Note that currently this is run directly after install
 # i.e. 'service apache2 start'
 
+# Disable TCP timestamps
+echo 0 > /proc/sys/net/ipv4/tcp_timestamps
+
+# Block ICMP timestamps
+iptables -A INPUT -p icmp --icmp-type timestamp-request -j DROP
+iptables -A OUTPUT -p icmp --icmp-type timestamp-reply -j DROP
+
 service polipo restart
 service tor restart
 
