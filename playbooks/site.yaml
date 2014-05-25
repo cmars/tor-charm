@@ -1,0 +1,68 @@
+- hosts: all
+  tasks:
+
+    - name: Generate nickname
+      shell: cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1
+      register: generated_nickname
+
+    - name: Set private address
+      shell: unit-get private-address
+      register: unit_private_address
+
+    - name: Set private network
+      shell: echo $(unit-get private-address | sed 's/[0-9]+$/\.0/')/24
+      register: unit_private_network
+
+    - name: Add torproject.org repository
+      apt_repository: repo='deb http://deb.torproject.org/torproject.org {{ ansible_distribution_release }} main' state=present
+      tags:
+        - install
+
+    - name: Add torproject.org package signing key
+      apt_key: keyserver=pool.sks-keyservers.net id=886DDD89 state=present
+      tags:
+        - install
+
+    - name: Install packages
+      apt: pkg={{ item }} state=latest update_cache=yes
+      with_items:
+        - deb.torproject.org-keyring
+        - tor
+        - polipo
+      tags:
+        - install
+        - upgrade-charm
+
+    - name: Start services
+      service: name={{ item }} state=started
+      with_items:
+        - tor
+        - polipo
+      tags:
+        - start
+
+    - name: Configure Tor
+      template: src=../torrc.j2 dest=/etc/tor/torrc 
+      tags:
+        - config-changed
+
+    - name: Configure Polipo
+      template: src=../polipo_config.j2 dest=/etc/polipo/config 
+      tags:
+        - config-changed
+
+    - name: Restart services
+      service: name={{ item }} state=restarted
+      with_items:
+        - tor
+        - polipo
+      tags:
+        - config-changed
+
+    - name: Stop services
+      service: name={{ item }} state=stopped
+      with_items:
+        - tor
+        - polipo
+      tags:
+        - stop

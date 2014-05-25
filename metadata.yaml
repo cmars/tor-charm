@@ -12,10 +12,14 @@ description: |
    default, this charm relays traffic internally for the Tor network but does
    not permit outbound traffic.
 categories:
-  - miscellaneous
+  - privacy
+  - anonymity
+  - freedom
 subordinate: false
 provides:
   socks5-proxy:
     interface: socks5
   http-proxy:
     interface: http
+  tor-control:
+    interface: control
