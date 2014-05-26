@@ -3,13 +3,13 @@
 
 # SOCKS proxy configuration
 
-SocksPort {{ unit_private_address }}:{{ socks5_proxy_port }}
+SocksPort {{ unit_private_address_result.stdout }}:{{ socks5_proxy_port }}
 SocksPort 127.0.0.1:{{ socks5_proxy_port }}
 
-{% if relay == "true" and defined(relay_port) %}
+{% if relay and defined(relay_port) %}
 ORPort 0.0.0.0:{{ relay_port }}
-Address {{ unit_public_address }}
-Nickname {{ relay_nickname|default(generated_nickname) }}
+Address {{ unit_public_address_result.stdout }}
+Nickname {{ relay_nickname|default(generated_nickname_result.stdout) }}
 ExitPolicy {{ relay_exit_policy }}
 {% endif %}
 

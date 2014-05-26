@@ -2,16 +2,28 @@
   tasks:
 
     - name: Generate nickname
-      shell: cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1
-      register: generated_nickname
+      shell: ../generate_nickname
+      register: generated_nickname_result
+      tags:
+        - config-changed
+
+    - name: Set public address
+      shell: "unit-get public-address"
+      register: unit_public_address_result
+      tags:
+        - config-changed
 
     - name: Set private address
-      shell: unit-get private-address
-      register: unit_private_address
+      shell: "unit-get private-address"
+      register: unit_private_address_result
+      tags:
+        - config-changed
 
     - name: Set private network
-      shell: echo $(unit-get private-address | sed 's/[0-9]+$/\.0/')/24
-      register: unit_private_network
+      shell: echo $(unit-get private-address | sed 's/[0-9]+$/\\.0/')/24
+      register: unit_private_network_result
+      tags:
+        - config-changed
 
     - name: Add torproject.org repository
       apt_repository: repo='deb http://deb.torproject.org/torproject.org {{ ansible_distribution_release }} main' state=present
