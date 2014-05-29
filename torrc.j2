@@ -13,3 +13,7 @@ Nickname {{ relay_nickname|default(generated_nickname_result.stdout) }}
 ExitPolicy {{ relay_exit_policy }}
 {% endif %}
 
+HiddenServiceDir /var/lib/tor/hidden_service/
+{% if hidden_website_result.stdout %}
+{{ hidden_website_result.stdout }}
+{% endif %}

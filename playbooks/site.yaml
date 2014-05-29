@@ -1,8 +1,24 @@
 - hosts: all
   tasks:
 
+# hidden-website relation
+#
+    - name: Add hidden website
+      shell: echo "$(relation-get hostname):$(relation-get port)" > /etc/tor/hidden-website
+      tags:
+        - hidden-website-joined
+        - hidden-website-changed
+
+    - name: Remove hidden website
+      shell: rm /etc/tor/hidden-website
+      tags:
+        - hidden-website-broken
+        - hidden-website-departed
+
+# config-changed tasks
+#
     - name: Generate nickname
-      shell: ../generate_nickname
+      shell: ../files/generate_nickname
       register: generated_nickname_result
       tags:
         - config-changed
@@ -25,6 +41,32 @@
       tags:
         - config-changed
 
+    - name: Set hidden-website, if any
+      shell: cat /etc/tor/hidden-website || true
+      register: hidden_website_result
+      tags:
+        - config-changed
+
+    - name: Configure Tor
+      template: src=../torrc.j2 dest=/etc/tor/torrc 
+      tags:
+        - config-changed 
+
+    - name: Configure Polipo
+      template: src=../polipo_config.j2 dest=/etc/polipo/config 
+      tags:
+        - config-changed
+
+    - name: Restart services
+      service: name={{ item }} state=restarted
+      with_items:
+        - tor
+        - polipo
+      tags:
+        - config-changed
+
+# install & upgrade tasks
+#
     - name: Add torproject.org repository
       apt_repository: repo='deb http://deb.torproject.org/torproject.org {{ ansible_distribution_release }} main' state=present
       tags:
@@ -45,6 +87,18 @@
         - install
         - upgrade-charm
 
+    - name: Create hidden service dir
+      shell: mkdir -p /var/lib/tor/hidden_service; chown -R debian-tor /var/lib/tor/hidden_service
+      tags:
+        - install
+
+# start & stop
+#
+    - name: Disable TCP & ICMP timestamping
+      shell: ../files/disable_timestamping
+      tags:
+        - start
+
     - name: Start services
       service: name={{ item }} state=started
       with_items:
@@ -53,24 +107,6 @@
       tags:
         - start
 
-    - name: Configure Tor
-      template: src=../torrc.j2 dest=/etc/tor/torrc 
-      tags:
-        - config-changed
-
-    - name: Configure Polipo
-      template: src=../polipo_config.j2 dest=/etc/polipo/config 
-      tags:
-        - config-changed
-
-    - name: Restart services
-      service: name={{ item }} state=restarted
-      with_items:
-        - tor
-        - polipo
-      tags:
-        - config-changed
-
     - name: Stop services
       service: name={{ item }} state=stopped
       with_items:
@@ -78,3 +114,4 @@
         - polipo
       tags:
         - stop
+
