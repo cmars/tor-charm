@@ -1,6 +1,13 @@
 #!/bin/bash -e
 
-echo "$(relation-get hostname):$(relation-get port)" > /etc/tor/hidden-website
+HOSTNAME=$(relation-get hostname)
+PORT=$(relation-get port)
+
+if [[ -n "$HOSTNAME" && -n "$PORT" ]]; then
+	echo "HiddenServicePort $PORT $HOSTNAME:$PORT" > /etc/tor/hidden-website
+else
+	exit 0
+fi
 
 hooks/config-changed
 
