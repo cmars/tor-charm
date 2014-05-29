@@ -1,20 +1,6 @@
 - hosts: all
   tasks:
 
-# hidden-website relation
-#
-    - name: Add hidden website
-      shell: echo "$(relation-get hostname):$(relation-get port)" > /etc/tor/hidden-website
-      tags:
-        - hidden-website-joined
-        - hidden-website-changed
-
-    - name: Remove hidden website
-      shell: rm /etc/tor/hidden-website
-      tags:
-        - hidden-website-broken
-        - hidden-website-departed
-
 # config-changed tasks
 #
     - name: Generate nickname

@@ -1,1 +1,6 @@
-hooks.py
+#!/bin/bash -e
+
+rm -f /etc/tor/hidden-website
+
+hooks/config-changed
+

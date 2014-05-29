@@ -1,1 +1,6 @@
-hooks.py
+#!/bin/bash -e
+
+echo "$(relation-get hostname):$(relation-get port)" > /etc/tor/hidden-website
+
+hooks/config-changed
+
