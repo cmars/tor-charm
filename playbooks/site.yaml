@@ -93,11 +93,21 @@
       tags:
         - start
 
+    - name: Open ports
+      shell: open-port $(config-get relay_port)
+      tags:
+        - start
+
     - name: Stop services
       service: name={{ item }} state=stopped
       with_items:
         - tor
         - polipo
+      tags:
+        - stop
+
+    - name: Close ports
+      shell: close-port $(config-get relay_port)
       tags:
         - stop
 

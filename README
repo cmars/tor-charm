@@ -1,41 +1,156 @@
-Describe the intended usage of this charm and anything unique about how
-this charm relates to others here. 
-
-This README will be displayed in the Charm Store, it should be either Markdown or RST. Ideal READMEs include instructions on how to use the charm, expected usage, and charm features that your audience might be interested in. For an example of a well written README check out Hadoop: http://jujucharms.com/charms/precise/hadoop
-
-Here's an example you might wish to template off of:
-
 Overview
---------
+========
 
-This charm provides (service) from (service homepage). Add a description here of what the service itself actually does. 
+This charm deploys a Tor proxy and relay. From the project website,
+https://tor.eff.org:
 
+Tor is a network of virtual tunnels that allows people and groups to improve
+their privacy and security on the Internet. It also enables software developers
+to create new communication tools with built-in privacy features. Tor provides
+the foundation for a range of applications that allow organizations and
+individuals to share information over public networks without compromising
+their privacy.
 
 Usage
 -----
 
-Step by step instructions on using the charm:
+Check out from Github:
 
-    juju deploy servicename
+	$ git clone https://github.com/cmars/tor-charm.git
 
-and so on. If you're providing a web service or something that the end user needs to go to, tell them here, especially if you're deploying a service that might listen to a non-default port. 
+Deploy Tor into your environment with:
 
-You can then browse to http://ip-address to configure the service. 
+	$ cd tor-charm
+    $ juju deploy --repository=../.. local:tor
+
+The tor charm can serve up any site that implements the 'http' interface, as a hidden service. For example, let's set up an anonymous blog:
+
+    $ juju deploy wordpress
+    $ juju deploy mysql
+    $ juju add-relation wordpress mysql
+    
+...some minutes later...
+
+    $ juju status mysql wordpress
+    mysql:
+      charm: cs:precise/mysql-44
+      exposed: false
+      relations:
+        db:
+        - wordpress
+      units:
+        mysql/0:
+          agent-state: started
+          machine: "1"
+          public-address: 10.0.3.249
+    wordpress:
+      charm: cs:precise/wordpress-22
+      exposed: false
+      relations:
+        db:
+        - mysql
+      units:
+        wordpress/0:
+          agent-state: started
+          machine: "2"
+          open-ports:
+          - 80/tcp
+          public-address: 10.0.3.14
+
+Ok, great. Now let's publish it as a hidden service:
+
+    $ juju add-relation tor wordpress
+
+...some seconds later...
+    
+    $ juju status tor wordpress
+    tor:
+      charm: local:precise/tor-31
+      exposed: false
+      relations:
+        hidden-website:
+        - wordpress
+      units:
+        tor/0:
+          agent-state: started
+          machine: "0"
+          open-ports:
+          - 9001/tcp
+          public-address: 69.5.252.15
+    wordpress:
+      charm: cs:precise/wordpress-22
+      exposed: false
+      relations:
+        db:
+        - mysql
+        website:
+        - tor
+      units:
+        wordpress/0:
+          agent-state: started
+          machine: "2"
+          open-ports:
+          - 80/tcp
+          public-address: 10.0.3.14
+
+Right now, wordpress sets port=8080 when relating to the http interface. Tor will expose this same port on the hidden service. But what's the hidden service hostname? Well, let's find out:
+
+    $ juju ssh tor/0 sudo cat /var/lib/tor/hidden_service/hostname
+    dd5ynxztezneysmy.onion
+    Connection to 69.5.252.15 closed.
+
+Fire up a browser that is proxied through the Tor network (see https://tor.eff.org for getting this set up), and visit the URL:
+
+    http://dd5ynxztezneysmy.onion:8080
 
 Configuration
 -------------
 
+Relay Settings
+~~~~~~~~~~~~~~
+
+The Tor service will relay traffic for the Tor network by default. However, it will not act as an exit node unless specifically configured.
+
+To disable the relay completely:
+
+    juju set tor relay=false
+
+To configure the relay as an exit node, set a policy which allows it, for example:
+
+    juju set tor relay_exit_policy="accept 18.7.22.69:*,reject 18.0.0.0/8:*,accept *:*"
+
+See the Tor man page (https://tor.eff.org/docs/tor-manual.html.en) for more information on how to construct an ExitPolicy string.
+    
 The configuration options will be listed on the charm store, however If you're making assumptions or opinionated decisions in the charm (like setting a default administrator password), you should detail that here so the user knows how to change it immediately, etc.
 
+TODO
+----
+
+socks5-proxy interface
+~~~~~~~~~~~~~~~~~~~~~~
+
+Other charms will be able to make network connections through the Tor network by relating to this interface. Because, reasons.
+
+tor-control interface
+~~~~~~~~~~~~~~~~~~~~~
+
+It'd be nice to expose the Tor control port to other services, so they can rotate the routing path and other things. Pull requests for this are welcome.
+
+obfsproxy
+~~~~~~~~~
+
+Network agility for when there's a lack of neutrality.
+
+More hidden services?
+~~~~~~~~~~~~~~~~~~~~~
+
+What other interfaces would be useful to publish as a hidden service?
 
 Contact Information
 -------------------
 
-Though this will be listed in the charm store itself don't assume a user will know that, so include that information here:
-
-Author:
-Report bugs at: http://bugs.launchpad.net/charms/+source/charmname
-Location: http://jujucharms.com/charms/distro/charmname
-
-* Be sure to remove the templated parts before submitting to https://launchpad.net/charms for inclusion in the charm store.
-
+Author: Casey Marshall <cmars@cmarstech.com>
+PGP: 8127 9EEE 7EC8 9FB7 8170  2ADA F793 62DA 44A2 D1DB
+Report bugs at: https://github.com/cmars/tor-charm/issues
+Location: https://github.com/cmars/tor-charm
+Hidden Website Demo: http://dd5ynxztezneysmy.onion:8080/
