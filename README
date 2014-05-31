@@ -20,7 +20,7 @@ Check out from Github:
 
 Deploy Tor into your environment with:
 
-	$ cd tor-charm
+    $ cd tor-charm
     $ juju deploy --repository=../.. local:tor
 
 The tor charm can serve up any site that implements the 'http' interface, as a hidden service. For example, let's set up an anonymous blog:
@@ -121,7 +121,7 @@ To configure the relay as an exit node, set a policy which allows it, for exampl
 
 See the Tor man page (https://tor.eff.org/docs/tor-manual.html.en) for more information on how to construct an ExitPolicy string.
     
-The configuration options will be listed on the charm store, however If you're making assumptions or opinionated decisions in the charm (like setting a default administrator password), you should detail that here so the user knows how to change it immediately, etc.
+You can set a nickname for your relay by setting relay_nickname. If you don't, a random nickname will be created for you.
 
 TODO
 ----
